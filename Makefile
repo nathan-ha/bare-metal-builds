@@ -1,49 +1,99 @@
-# Compiler and Tools
-CC = arm-none-eabi-gcc
-LD = arm-none-eabi-gcc
-OBJCOPY = arm-none-eabi-objcopy
+# Project name
+TARGET = firmware
 
 # Directories
-CMSIS_DIR = path/to/CMSIS
-DEVICE_HEADERS_DIR = path/to/device_headers
-SRC_DIR = .
 BUILD_DIR = build
+SRC_DIR = src
+INC_DIR = inc
+
+# Toolchain definitions
+PREFIX = arm-none-eabi-
+CC = $(PREFIX)gcc
+AS = $(PREFIX)gcc -x assembler-with-cpp
+CP = $(PREFIX)objcopy
+SZ = $(PREFIX)size
+
+# ST-LINK utilities
+STFLASH = st-flash
+STUTIL = st-util
+STINFO = st-info
+
+# MCU settings
+MCU = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+
+# AS defines
+AS_DEFS =
+
+# C defines
+C_DEFS = \
+-DSTM32F303xE
+
+# AS includes
+AS_INCLUDES = 
+
+# C includes
+C_INCLUDES = \
+-I$(INC_DIR)
+
+# Compile flags
+ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) -lc -lm -lnosys -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
+
+# Default optimization level
+OPT = -Os
 
 # Source files
-SRC = $(SRC_DIR)/main.c $(SRC_DIR)/syscalls.c
-OBJ = $(SRC:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
+C_SOURCES = \
+$(SRC_DIR)/main.c \
+$(INC_DIR)/system_stm32f3xx.c
 
-# Output files
-TARGET = main.elf
-HEXCOPY = $(BUILD_DIR)/main.hex
+ASM_SOURCES = \
+$(INC_DIR)/startup_stm32f303xe.s
 
-# Flags
-CFLAGS = -mcpu=cortex-m4 -mthumb -I$(CMSIS_DIR) -I$(DEVICE_HEADERS_DIR) -Wall $(EXTRA_CFLAGS)
-LDFLAGS = -T STM32F303RETX_FLASH.ld -nostartfiles -nostdlib --specs nano.specs -lc -lgcc -Wl,--gc-sections -Wl,-Map=$@.map
+# Linker script
+LDSCRIPT = $(INC_DIR)/STM32F303RETX_FLASH.ld
 
-EXTRA_CFLAGS = -W -Wall -Wextra -Wundef -Wshadow -Wdouble-promotion \
-               -Wformat-truncation -fno-common -Wconversion \
-               -g3 -Os -ffunction-sections -fdata-sections -I. \
-               -mfloat-abi=hard -mfpu=fpv4-sp-d16 # -Werror
+# Object files
+OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
+OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 
-# Rules
-all: $(TARGET) $(HEXCOPY)
+# Default rules
+all: directories $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
 
-$(TARGET): $(OBJ)
-	$(LD) $(LDFLAGS) -o $@ $^
+directories:
+	@mkdir -p $(BUILD_DIR)
 
+# Linker
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS)
+	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+	$(SZ) $@
+
+$(BUILD_DIR)/$(TARGET).hex: $(BUILD_DIR)/$(TARGET).elf
+	$(CP) -O ihex $< $@
+
+$(BUILD_DIR)/$(TARGET).bin: $(BUILD_DIR)/$(TARGET).elf
+	$(CP) -O binary -S $< $@
+
+# Pattern rules for building objects
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
-$(HEXCOPY): $(TARGET)
-	$(OBJCOPY) -O ihex $(TARGET) $(HEXCOPY)
+$(BUILD_DIR)/%.o: $(INC_DIR)/%.c
+	$(CC) -c $(CFLAGS) $< -o $@
 
-flash: $(TARGET)
-	st-flash --reset write $(TARGET) 0x8000000
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.s
+	$(AS) -c $(ASFLAGS) $< -o $@
+
+$(BUILD_DIR)/%.o: $(INC_DIR)/%.s
+	$(AS) -c $(ASFLAGS) $< -o $@
+
+# Flash the device
+flash: $(BUILD_DIR)/$(TARGET).bin
+	@echo "Flashing $(TARGET).bin to STM32F303RE..."
+	$(STFLASH) write $(BUILD_DIR)/$(TARGET).bin 0x8000000
 
 clean:
-	rm -rf $(BUILD_DIR) $(TARGET) $(HEXCOPY)
-	rm -f $(OBJ) *.map
+	rm -rf $(BUILD_DIR)
 
-.PHONY: all clean flash
+.PHONY: all clean flash directories

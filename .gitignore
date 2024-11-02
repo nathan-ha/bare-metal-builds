@@ -2,4 +2,6 @@
 *.out
 *.map
 *.out
+*.o
+*.hex
 build/
