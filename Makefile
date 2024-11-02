@@ -46,7 +46,8 @@ OPT = -Os
 # Source files
 C_SOURCES = \
 $(SRC_DIR)/main.c \
-$(INC_DIR)/system_stm32f3xx.c
+$(INC_DIR)/system_stm32f3xx.c \
+$(INC_DIR)/syscalls.c
 
 ASM_SOURCES = \
 $(INC_DIR)/startup_stm32f303xe.s
