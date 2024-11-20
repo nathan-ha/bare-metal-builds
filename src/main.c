@@ -1,5 +1,4 @@
-#include "MK64F12.h"
-// #include "fsl_device_registers.h"
+#include "fsl_device_registers.h"
 
 #define ADC0_SE8_PTB0   8   // Joystick X
 #define ADC0_SE9_PTB1   9   // JoyStick Y
