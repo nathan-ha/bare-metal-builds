@@ -25,3 +25,4 @@ int _fstat(int file, struct stat *st) {
 int _isatty(int file) {
     return 1;
 }
+

@@ -13,11 +13,6 @@ AS = $(PREFIX)gcc -x assembler-with-cpp
 CP = $(PREFIX)objcopy
 SZ = $(PREFIX)size
 
-# ST-LINK utilities
-STFLASH = st-flash
-STUTIL = st-util
-STINFO = st-info
-
 # MCU settings
 MCU = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard
 
@@ -26,14 +21,15 @@ AS_DEFS =
 
 # C defines
 C_DEFS = \
--DSTM32F303xE
+-DCPU_MK64FN1M0VLL12
 
 # AS includes
 AS_INCLUDES = 
 
 # C includes
 C_INCLUDES = \
--I$(INC_DIR)
+-I$(INC_DIR) \
+-I$(INC_DIR)/MK64F12/
 
 # Compile flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
@@ -46,14 +42,14 @@ OPT = -Os
 # Source files
 C_SOURCES = \
 $(SRC_DIR)/main.c \
-$(INC_DIR)/system_stm32f3xx.c \
-$(INC_DIR)/syscalls.c
+$(SRC_DIR)/syscalls.c \
+$(SRC_DIR)/system_MK64F12.c
 
 ASM_SOURCES = \
-$(INC_DIR)/startup_stm32f303xe.s
+$(INC_DIR)/startup_MK64F12.s
 
 # Linker script
-LDSCRIPT = $(INC_DIR)/STM32F303RETX_FLASH.ld
+LDSCRIPT = $(INC_DIR)/MK64FN1M0xxx12_flash.ld
 
 # Object files
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
@@ -70,17 +66,7 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS)
 	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 	$(SZ) $@
 
-$(BUILD_DIR)/$(TARGET).hex: $(BUILD_DIR)/$(TARGET).elf
-	$(CP) -O ihex $< $@
-
-$(BUILD_DIR)/$(TARGET).bin: $(BUILD_DIR)/$(TARGET).elf
-	$(CP) -O binary -S $< $@
-
-# Pattern rules for building objects
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) -c $(CFLAGS) $< -o $@
-
-$(BUILD_DIR)/%.o: $(INC_DIR)/%.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.s
@@ -89,10 +75,16 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.s
 $(BUILD_DIR)/%.o: $(INC_DIR)/%.s
 	$(AS) -c $(ASFLAGS) $< -o $@
 
-# Flash the device
+$(BUILD_DIR)/$(TARGET).hex: $(BUILD_DIR)/$(TARGET).elf
+	$(CP) -O ihex $< $@
+
+$(BUILD_DIR)/$(TARGET).bin: $(BUILD_DIR)/$(TARGET).elf
+	$(CP) -O binary -S $< $@
+
+# Flash the device using OpenOCD
 flash: $(BUILD_DIR)/$(TARGET).bin
-	@echo "Flashing $(TARGET).bin to STM32F303RE..."
-	$(STFLASH) write $(BUILD_DIR)/$(TARGET).bin 0x8000000
+	@echo "Flashing $(TARGET).bin to MK64FN1M0xxx12 using OpenOCD..."
+	openocd -f interface/stlink-v2.cfg -f target/mk64f12.cfg -c "program $(BUILD_DIR)/$(TARGET).bin verify reset exit"
 
 clean:
 	rm -rf $(BUILD_DIR)
