@@ -22,10 +22,8 @@ void ADC_init() {
 uint16_t ADC_read16b(uint16_t channel) {
   // Start conversion by writing the channel to SC1A
   ADC0_SC1A = channel & 0x1F;
-  while (ADC0_SC2 & ADC_SC2_ADACT_MASK)
-    ; // Conversion in progress
-  while (!(ADC0_SC1A & ADC_SC1_COCO_MASK))
-    ; // Wait until conversion complete
+  while (ADC0_SC2 & ADC_SC2_ADACT_MASK); // Conversion in progress
+  while (!(ADC0_SC1A & ADC_SC1_COCO_MASK)); // Wait until conversion complete
   return ADC0_RA;
 }
 

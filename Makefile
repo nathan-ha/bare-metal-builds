@@ -42,8 +42,8 @@ OPT = -Os
 # Source files
 C_SOURCES = \
 $(SRC_DIR)/main.c \
-$(SRC_DIR)/syscalls.c \
-$(SRC_DIR)/system_MK64F12.c
+$(INC_DIR)/syscalls.c \
+$(INC_DIR)/system_MK64F12.c
 
 ASM_SOURCES = \
 $(INC_DIR)/startup_MK64F12.s
@@ -66,9 +66,14 @@ $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS)
 	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 	$(SZ) $@
 
+# Compile .c files from src and inc directories
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) -c $(CFLAGS) $< -o $@
 
+$(BUILD_DIR)/%.o: $(INC_DIR)/%.c
+	$(CC) -c $(CFLAGS) $< -o $@
+
+# Compile .s files from inc directory
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.s
 	$(AS) -c $(ASFLAGS) $< -o $@
 
@@ -86,7 +91,6 @@ flash: $(BUILD_DIR)/$(TARGET).bin
 	openocd -f interface/opensda.cfg \
 		-f board/nxp_frdm-k64f.cfg \
 		-c "program $(BUILD_DIR)/$(TARGET).bin verify reset exit"
-
 
 clean:
 	rm -rf $(BUILD_DIR)

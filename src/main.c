@@ -34,7 +34,7 @@ int main() {
       rotate_tick(0, 0); // Counterclockwise
     }
     // If in dead zone (between thresholds), motor stays still
-    uprint("hello");
+    uprintf("hello");
     delayms(200);
   }
 }
