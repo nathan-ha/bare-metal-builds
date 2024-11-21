@@ -124,4 +124,57 @@ void uprintf(const char *format, ...) {
   va_end(args);
 }
 
+void uprintfln(const char *format, ...) {
+  va_list args; // List to hold variable arguments
+  va_start(args, format);
+
+  while (*format) {
+    if (*format == '%') {
+      format++; // Move past '%'
+      switch (*format) {
+      case 'c': {                   // Character
+        char c = va_arg(args, int); // Fetch next argument as a character
+        uputc(c);
+        break;
+      }
+      case 's': { // String
+        char *str = va_arg(args, char *);
+        while (*str) {
+          uputc(*str++);
+        }
+        break;
+      }
+      case 'd': { // Decimal integer
+        int num = va_arg(args, int);
+        if (num < 0) {
+          uputc('-');
+          num = -num;
+        }
+        char buffer[10]; // Buffer to hold the number
+        int i = 0;
+        do {
+          buffer[i++] = (num % 10) + '0'; // Convert digit to character
+          num /= 10;
+        } while (num);
+        while (i--) {
+          uputc(buffer[i]); // Print the number in reverse
+        }
+        break;
+      }
+      default:
+        uputc('%'); // Handle unknown format specifier
+        uputc(*format);
+        break;
+      }
+    } else {
+      uputc(*format); // Print normal characters
+    }
+    format++;
+  }
+
+  uputc('\r');
+  uputc('\n');
+
+  va_end(args);
+}
 #endif
