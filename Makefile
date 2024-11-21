@@ -81,10 +81,12 @@ $(BUILD_DIR)/$(TARGET).hex: $(BUILD_DIR)/$(TARGET).elf
 $(BUILD_DIR)/$(TARGET).bin: $(BUILD_DIR)/$(TARGET).elf
 	$(CP) -O binary -S $< $@
 
-# Flash the device using OpenOCD
 flash: $(BUILD_DIR)/$(TARGET).bin
-	@echo "Flashing $(TARGET).bin to MK64FN1M0xxx12 using OpenOCD..."
-	openocd -f interface/stlink-v2.cfg -f target/mk64f12.cfg -c "program $(BUILD_DIR)/$(TARGET).bin verify reset exit"
+	@echo "Flashing with OpenSDA interface..."
+	openocd -f interface/opensda.cfg \
+		-f board/nxp_frdm-k64f.cfg \
+		-c "program $(BUILD_DIR)/$(TARGET).bin verify reset exit"
+
 
 clean:
 	rm -rf $(BUILD_DIR)

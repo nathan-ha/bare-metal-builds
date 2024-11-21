@@ -1,0 +1,21 @@
+#ifndef __PHOTORESISTOR_H__
+#define __PHOTORESISTOR_H__
+
+#include "fsl_device_registers.h"
+#include "adc.h"
+
+#define ADC_PHOTORESISTOR_N ADC0_SE13_PTB3
+#define ADC_PHOTORESISTOR_S ADC0_SE14_PTC0
+#define ADC_PHOTORESISTOR_E ADC0_SE15_PTC1
+#define ADC_PHOTORESISTOR_W ADC0_SE17_PTE24
+
+
+void photoresistor_init() {
+  SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK;
+  SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK;
+  SIM_SCGC5 |= SIM_SCGC5_PORTE_MASK;
+}
+
+
+
+#endif
