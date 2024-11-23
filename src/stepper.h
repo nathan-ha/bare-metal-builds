@@ -2,9 +2,14 @@
 #define __STEPPER_H__
 
 #include "fsl_device_registers.h"
+#include "stdint.h"
 
-#define NOT_MOVING 2
 #define SW_DELAY_TICKS 2500
+#define COUNTER_CLOCKWISE 0
+#define CLOCKWISE 1
+#define NOT_MOVING 2
+
+
 
 enum { A, B, C, D } STEP_HORIZONTAL = A, STEP_VERTICAL = A;
 const uint8_t STEP_VALUES_HORIZONTAL[] = {0b0001, 0b0011, 0b0010, 0b0110,
@@ -57,16 +62,17 @@ void rotate_one_tick(uint8_t ROT_DIR_VERTICAL, uint8_t ROT_DIR_HORIZONTAL) {
 }
 
 // x > 0 --> clockwise horizontal movement
-// y > 0 --> front face up
+// y > 0 --> front face down
 void rotate_by(int16_t x, int16_t y) {
   uint8_t HORIZONTAL_CLOCKWISE = x > 0;
-  uint8_t VERTICAL_FACE_UP = y > 0;
+  // TODO -- am currently assuming that this is true; may need to flip depending on hardware
+  uint8_t VERTICAL_FACE_DOWN = y > 0;
 
   if (x < 0) x = -x;
   if (y < 0) y = -y;
 
   while (x > 0 && y > 0) {
-    rotate_one_tick(HORIZONTAL_CLOCKWISE, VERTICAL_FACE_UP);
+    rotate_one_tick(HORIZONTAL_CLOCKWISE, VERTICAL_FACE_DOWN);
     SW_DELAY(SW_DELAY_TICKS);
     x--;
     y--;
@@ -79,7 +85,7 @@ void rotate_by(int16_t x, int16_t y) {
   }
 
   while (y > 0) {
-    rotate_one_tick(NOT_MOVING, VERTICAL_FACE_UP);
+    rotate_one_tick(NOT_MOVING, VERTICAL_FACE_DOWN);
     SW_DELAY(SW_DELAY_TICKS);
     y--;
   }

@@ -11,6 +11,8 @@
 #define ADC0_SE15_PTC1 15  // Photoresistor E
 #define ADC0_SE17_PTE24 17 // Photoresistor W
 
+#define ADC_EQUAL_THRESHOLD 800
+
 void ADC_init() {
   // Enable clock for ADC0
   SIM_SCGC6 |= SIM_SCGC6_ADC0_MASK;
@@ -27,4 +29,10 @@ uint16_t ADC_read16b(uint16_t channel) {
   return ADC0_RA;
 }
 
+
+// Returns true if ADC values are within threshold of each other
+uint8_t adc_equal(uint16_t x, uint16_t y) {
+    uint16_t diff = (x > y) ? (x - y) : (y - x);
+    return diff <= ADC_EQUAL_THRESHOLD;
+}
 #endif

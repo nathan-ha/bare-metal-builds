@@ -2,7 +2,7 @@
 #define __DELAY_H__
 
 void timer_init() {
-  SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK; // Port C clock enable. Needed?
+  SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK; 
   SIM_SCGC3 |= SIM_SCGC3_FTM3_MASK;  // FTM3 clock enable
   FTM3_MODE = 0x5;                   // Enable FTM3
   FTM3_MOD = 0xFFFF;
