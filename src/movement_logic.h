@@ -2,6 +2,7 @@
 #define __MOVEMENT_LOGIC_H__
 
 #include "adc.h"
+#include "photoresistor.h"
 #include "stepper.h"
 #include "uart.h"
 
@@ -20,10 +21,10 @@ enum tracker_state { HOME, N, S, E, W, NE, SE, NW, SW } tstate;
 enum joystick_state { UP_OFF, DOWN_ON, UP_ON, DOWN_OFF } jstate;
 
 void tick_automatic() {
-  const uint16_t pn = ADC_read16b(ADC0_SE13_PTB3);
-  const uint16_t ps = ADC_read16b(ADC0_SE14_PTC0);
-  const uint16_t pe = ADC_read16b(ADC0_SE15_PTC1);
-  const uint16_t pw = ADC_read16b(ADC0_SE17_PTE24);
+  const uint16_t pn = ADC_read16b(ADC_PHOTORESISTOR_N);
+  const uint16_t ps = ADC_read16b(ADC_PHOTORESISTOR_S);
+  const uint16_t pe = ADC_read16b(ADC_PHOTORESISTOR_E);
+  const uint16_t pw = ADC_read16b(ADC_PHOTORESISTOR_W);
 
   const uint8_t home = adc_equal(pe, pw) && adc_equal(ps, pn);
   const uint8_t north = adc_equal(pn, pw) && pn > ps;

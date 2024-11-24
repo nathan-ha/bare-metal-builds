@@ -10,11 +10,9 @@
 #define NOT_MOVING 2
 
 
-
-enum { A, B, C, D } STEP_HORIZONTAL = A, STEP_VERTICAL = A;
-const uint8_t STEP_VALUES_HORIZONTAL[] = {0b0001, 0b0011, 0b0010, 0b0110,
+const uint32_t STEP_VALUES_HORIZONTAL[] = {0b0001, 0b0011, 0b0010, 0b0110,
                                           0b0100, 0b1100, 0b1000, 0b1001};
-const uint8_t STEP_VALUES_VERTICAL[] = {0b0001 << 4, 0b0011 << 4, 0b0010 << 4,
+const uint32_t STEP_VALUES_VERTICAL[] = {0b0001 << 4, 0b0011 << 4, 0b0010 << 4,
                                         0b0110 << 4, 0b0100 << 4, 0b1100 << 4,
                                         0b1000 << 4, 0b1001 << 4};
 
@@ -29,9 +27,6 @@ void stepper_init() {
   GPIOD_PDDR = 0x000000FFFF;         // PD[15:0] output
 }
 
-// Horizontal: 0 - counterclockwise
-//			   		 1 - clockwise
-//             2 - no move
 void rotate_one_tick(uint8_t ROT_DIR_VERTICAL, uint8_t ROT_DIR_HORIZONTAL) {
   static int16_t i = 0;
   static int16_t j = 0;
@@ -61,9 +56,8 @@ void rotate_one_tick(uint8_t ROT_DIR_VERTICAL, uint8_t ROT_DIR_HORIZONTAL) {
   GPIOD_PDOR = STEP_VALUES_VERTICAL[i] | STEP_VALUES_HORIZONTAL[j];
 }
 
-// x > 0 --> clockwise horizontal movement
-// y > 0 --> front face down
-void rotate_by(int16_t x, int16_t y) {
+
+void rotate_by(int32_t x, int32_t y) {
   uint8_t HORIZONTAL_CLOCKWISE = x > 0;
   // TODO -- am currently assuming that this is true; may need to flip depending on hardware
   uint8_t VERTICAL_FACE_DOWN = y > 0;

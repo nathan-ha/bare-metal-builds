@@ -13,7 +13,7 @@ void setup() {
   photoresistor_init();
   timer_init();
 
-  PORTE_GPCLR |= 0x00000100 | (1 << 26); // gpio on PTE26     
+  PORTE_PCR26 = PORT_PCR_MUX(1); // gpio on PTE26     
   GPIOE_PDDR |= (1 << 26); // pin 26 output (LED for manual mode)        
 
 }
