@@ -39,7 +39,9 @@ void tick_automatic() {
   switch (tstate) {
 
   case HOME:
-    if (north) {
+    if (home) {
+      break;
+    } else if (north) {
       tstate = N;
       rotate_by(0, STEP_VERTICAL);
     } else if (south) {
