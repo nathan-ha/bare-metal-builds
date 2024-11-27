@@ -31,7 +31,7 @@ void rotate_one_tick(uint8_t ROT_DIR_VERTICAL, uint8_t ROT_DIR_HORIZONTAL) {
   static int16_t i = 0;
   static int16_t j = 0;
 
-  if (ROT_DIR_VERTICAL) {
+  if (ROT_DIR_VERTICAL && ROT_DIR_VERTICAL != NOT_MOVING) {
     i = (i + 1) % 8;
     if (i < 0)
       i += 8;
@@ -41,7 +41,7 @@ void rotate_one_tick(uint8_t ROT_DIR_VERTICAL, uint8_t ROT_DIR_HORIZONTAL) {
       i += 8;
   }
 
-  if (ROT_DIR_HORIZONTAL) {
+  if (ROT_DIR_HORIZONTAL && ROT_DIR_HORIZONTAL != NOT_MOVING) {
     // clockwise
     j = (j + 1) % 8;
     if (j < 0)

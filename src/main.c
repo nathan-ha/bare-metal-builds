@@ -5,6 +5,7 @@
 #include "uart.h"
 #include "delay.h"
 #include "movement_logic.h"
+#include "custom_interrupts.h"
 
 void setup() {
   UART0_init();
@@ -12,6 +13,7 @@ void setup() {
   stepper_init();
   photoresistor_init();
   timer_init();
+  // init_custom_interrupts();
 
   PORTE_PCR26 = PORT_PCR_MUX(1); // gpio on PTE26     
   GPIOE_PDDR |= (1 << 26); // pin 26 output (LED for manual mode)        
