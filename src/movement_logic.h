@@ -13,6 +13,8 @@
 #define STEP_HORIZONTAL 550
 #define STEP_VERTICAL (STEP_HORIZONTAL)
 
+#define SCALED_THRESHHOLD 10
+
 #define PIN_LED 26
 
 #define USUB(x, y) ((x) > (y) ? (x) - (y) : (y) - (x))
@@ -29,56 +31,43 @@ void tick_automatic() {
   uint16_t pe = ADC_read16b(ADC_PHOTORESISTOR_E);
   uint16_t pw = ADC_read16b(ADC_PHOTORESISTOR_W);
 
-  pn = map(pn, 40000, 62000, 0, 255);
-  ps = map(ps, 6000, 60000, 0, 255);
-  pe = map(pe, 2000, 55000, 0, 255);
-  pw = map(pw, 50000, 65000, 0, 255);
+  pn = map(pn, 46000, 60000, 0, 255);
+  ps = map(ps, 30000, 61000, 0, 255);
+  pe = map(pe, 42000, 62000, 0, 255);
+  pw = map(pw, 51000, 65000, 0, 255);
 
-  const uint8_t home =
-      USUB(pe, pw) <= 10 && // East and West sensors are very close
-      USUB(pn, ps) <= 10;   // North and South sensors are very close
+  // Home state: all sensors are roughly equal
+  const uint8_t home = adc_equal(pe, pw) && adc_equal(pn, ps);
 
-  const uint8_t north = pn > ps && pn > pe && pn > pw;
-  const uint8_t south = ps > pn && ps > pe && ps > pw;
-  const uint8_t east = pe > pn && pe > ps && pe > pw;
-  const uint8_t west = pw > pn && pw > ps && pw > pe;
+  // Refined directional detection logic
+  const uint8_t north =
+      (pn > ps + SCALED_THRESHHOLD) && !adc_equal(pn, pe) && !adc_equal(pn, pw);
+
+  const uint8_t south =
+      (ps > pn + SCALED_THRESHHOLD) && !adc_equal(ps, pe) && !adc_equal(ps, pw);
+
+  const uint8_t east =
+      (pe > pw + SCALED_THRESHHOLD) && !adc_equal(pe, pn) && !adc_equal(pe, ps);
+
+  const uint8_t west =
+      (pw > pe + SCALED_THRESHHOLD) && !adc_equal(pw, pn) && !adc_equal(pw, ps);
 
   const uint8_t northeast =
-      pn > ps && pe > pw && pn > (ps + 20) && pe > (pw + 20);
+      (pn > ps + SCALED_THRESHHOLD) && (pe > pw + SCALED_THRESHHOLD);
 
   const uint8_t northwest =
-      pn > ps && pw > pe && pn > (ps + 20) && pw > (pe + 20);
+      (pn > ps + SCALED_THRESHHOLD) && (pw > pe + SCALED_THRESHHOLD);
 
   const uint8_t southeast =
-      ps > pn && pe > pw && ps > (pn + 20) && pe > (pw + 20);
+      (ps > pn + SCALED_THRESHHOLD) && (pe > pw + SCALED_THRESHHOLD);
 
   const uint8_t southwest =
-      ps > pn && pw > pe && ps > (pn + 20) && pw > (pe + 20);
+      (ps > pn + SCALED_THRESHHOLD) && (pw > pe + SCALED_THRESHHOLD);
 
   switch (tstate) {
   case HOME:
     if (home) {
       break;
-    } else if (north) {
-      tstate = N;
-      rotate_by(0, STEP_VERTICAL);
-      uprintf("State changed: HOME -> NORTH (pn:%d, ps:%d, pe:%d, pw:%d)\n", pn,
-              ps, pe, pw);
-    } else if (south) {
-      tstate = S;
-      rotate_by(0, STEP_VERTICAL * -1);
-      uprintf("State changed: HOME -> SOUTH (pn:%d, ps:%d, pe:%d, pw:%d)\n", pn,
-              ps, pe, pw);
-    } else if (east) {
-      tstate = E;
-      rotate_by(STEP_HORIZONTAL * 2, STEP_VERTICAL);
-      uprintf("State changed: HOME -> EAST (pn:%d, ps:%d, pe:%d, pw:%d)\n", pn,
-              ps, pe, pw);
-    } else if (west) {
-      tstate = W;
-      rotate_by(STEP_HORIZONTAL * -2, STEP_VERTICAL);
-      uprintf("State changed: HOME -> WEST (pn:%d, ps:%d, pe:%d, pw:%d)\n", pn,
-              ps, pe, pw);
     } else if (northeast) {
       tstate = NE;
       rotate_by(STEP_HORIZONTAL, STEP_VERTICAL);
@@ -99,9 +88,34 @@ void tick_automatic() {
       rotate_by(STEP_HORIZONTAL * -1, STEP_VERTICAL * -1);
       uprintf("State changed: HOME -> SOUTHEAST (pn:%d, ps:%d, pe:%d, pw:%d)\n",
               pn, ps, pe, pw);
+    } else if (north) {
+      tstate = N;
+      rotate_by(0, STEP_VERTICAL);
+      uprintf("State changed: HOME -> NORTH (pn:%d, ps:%d, pe:%d, pw:%d)\n", pn,
+              ps, pe, pw);
+    } else if (south) {
+      tstate = S;
+      rotate_by(0, STEP_VERTICAL * -1);
+      uprintf("State changed: HOME -> SOUTH (pn:%d, ps:%d, pe:%d, pw:%d)\n", pn,
+              ps, pe, pw);
+    } else if (east) {
+      tstate = E;
+      rotate_by(STEP_HORIZONTAL * 2, STEP_VERTICAL);
+      uprintf("State changed: HOME -> EAST (pn:%d, ps:%d, pe:%d, pw:%d)\n", pn,
+              ps, pe, pw);
+    } else if (west) {
+      tstate = W;
+      rotate_by(STEP_HORIZONTAL * -2, STEP_VERTICAL);
+      uprintf("State changed: HOME -> WEST (pn:%d, ps:%d, pe:%d, pw:%d)\n", pn,
+              ps, pe, pw);
     } else {
       tstate = HOME;
-      uprintf("%s:%d - FSM Error\n\n", __FILE__, __LINE__);
+      uprintf("%s:%d - FSM Error\n\n\n", __FILE__, __LINE__);
+      uprintf("N %d\n", ADC_read16b(ADC_PHOTORESISTOR_N));
+      uprintf("S %d\n", ADC_read16b(ADC_PHOTORESISTOR_S));
+      uprintf("E %d\n", ADC_read16b(ADC_PHOTORESISTOR_E));
+      uprintf("W %d\n\n", ADC_read16b(ADC_PHOTORESISTOR_W));
+      uprintf("Status (pn:%d, ps:%d, pe:%d, pw:%d)\n", pn, ps, pe, pw);
     }
     break;
   case N:
@@ -160,11 +174,11 @@ void tick_automatic() {
 }
 
 void tick_joystick() {
-  const uint16_t stick_down = ADC_read16b(ADC0_SE23_DAC0_OUT) < 1000;
+  const uint16_t stick_down = ADC_read16b(ADC0_SE23_DAC0_OUT) < LOW_THRESHOLD;
   if (stick_down) {
     tstate = HOME;
     manual_mode = !manual_mode;
-    SW_DELAY(100000);
+    SW_DELAY(10000);
   }
 }
 

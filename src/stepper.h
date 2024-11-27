@@ -59,7 +59,6 @@ void rotate_one_tick(uint8_t ROT_DIR_VERTICAL, uint8_t ROT_DIR_HORIZONTAL) {
 
 void rotate_by(int32_t x, int32_t y) {
   uint8_t HORIZONTAL_CLOCKWISE = x > 0;
-  // TODO -- am currently assuming that this is true; may need to flip depending on hardware
   uint8_t VERTICAL_FACE_DOWN = y > 0;
 
   if (x < 0) x = -x;

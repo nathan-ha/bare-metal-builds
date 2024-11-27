@@ -12,7 +12,7 @@
 #define ADC0_SE18_PTE25 18  // Photoresistor N
 #define ADC0_SE23_DAC0_OUT   23  // Joystick SW
 
-#define ADC_EQUAL_THRESHOLD 50
+#define ADC_EQUAL_THRESHOLD 80
 
 void ADC_init() {
   // Enable clock for ADC0

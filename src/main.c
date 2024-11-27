@@ -30,6 +30,7 @@ void tick() {
     GPIOE_PDOR &= ~(1 << 26);
     tick_automatic();
   }
+  tick_joystick();
 }
 
 int main() {
